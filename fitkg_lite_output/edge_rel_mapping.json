@@ -1,0 +1,9 @@
+{
+  "hasIntensity": 0,
+  "hasType": 1,
+  "isVariationOf": 2,
+  "recruits": 3,
+  "requires": 4,
+  "supportsGoal": 5,
+  "targets": 6
+}
