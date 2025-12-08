@@ -18,9 +18,7 @@ except Exception as e:
 output_dir = "fitkg_lite_output"
 os.makedirs(output_dir, exist_ok=True)
 
-# ----------------------------
 # VOCAB: Muscles, Equip, Types, Intensity, Goals
-# ----------------------------
 muscle_groups = [
     "Quadriceps","Hamstrings","Glutes","Calves","Hip Flexors",
     "Chest","Upper Back","Lats","Lower Back","Trapezius",
@@ -44,10 +42,8 @@ intensities = ["Low","Moderate","High"]
 
 exercise_goals = ["Strength","Hypertrophy","Fat Loss","Endurance","Mobility","Rehab","Power"]
 
-# ----------------------------
-# EXERCISES LIST (curated, ~380 entries)
-# We'll use a large curated list across categories (legs, chest, back, shoulders, arms, core, cardio, mobility)
-# ----------------------------
+# EXERCISES LIST (380 entries)
+# categories (legs, chest, back, shoulders, arms, core, cardio, mobility)
 
 JSON_PATH = "exercises_full_v2.json"
 
@@ -56,11 +52,11 @@ with open(JSON_PATH, "r") as f:
 
 print(f"Loaded {len(exercises)} exercises from JSON.")
 
-# ----------------------------
+
 # Mapping heuristics (some primary muscle mapping examples)
 # For simplicity, we'll define a mapping for many of the common exercises.
 # For others the script will apply heuristics (keyword matching).
-# ----------------------------
+
 primary_muscle_map = {
     # Legs examples
     "Barbell Back Squat": ["Quadriceps","Glutes","Hamstrings"],
@@ -115,16 +111,17 @@ equipment_map = {
     "Treadmill":"Treadmill","Cycling (Stationary)":"Cycling (Stationary)","Rowing (Machine)":"Rowing Machine",
     "Plank":"None","Burpee":"None","Box Jump":"None","Jump Rope":"None","Sled Push":"None"
 }
-# ----------------------------
+
+
 # utility heuristics
-# ----------------------------
+
 def infer_primary_muscles(name):
     # check mapping first
     if name in primary_muscle_map:
         return primary_muscle_map[name]
     # heuristics
     name_lower = name.lower()
-    # leg indicators
+    # muscle indicators
     if any(k in name_lower for k in ["squat","lunge","leg","deadlift","thrust","hip","glute","step up","press"]):
         return ["Quadriceps","Glutes"]
     if any(k in name_lower for k in ["bench","push","chest","fly","pec"]):
@@ -200,9 +197,9 @@ def infer_goals(name):
         goals = ["Strength"]
     return list(set(goals))
 
-# ----------------------------
+
 # Build nodes and edges
-# ----------------------------
+
 nodes = []
 edges = []
 
@@ -307,9 +304,9 @@ for e in edges:
         unique_edges.append(e)
 edges = unique_edges
 
-# ----------------------------
+
 # Export nodes.csv and edges.csv
-# ----------------------------
+
 nodes_df = pd.DataFrame(nodes)
 # expand attrs to JSON string for CSV
 nodes_df["attrs_json"] = nodes_df["attrs"].apply(lambda x: json.dumps(x, ensure_ascii=False))
@@ -336,9 +333,9 @@ with open(os.path.join(output_dir,"summary.txt"), "w", encoding="utf-8") as f:
 print("Exported CSVs to", output_dir)
 print("Summary:", summary)
 
-# ----------------------------
+
 # Build PyG graph if available
-# ----------------------------
+
 if pyg_available:
     print("Building PyG Data object...")
     # build node features: one-hot for types + simple name embedding fallback (length)
