@@ -21,10 +21,10 @@ os.makedirs(output_dir, exist_ok=True)
 # VOCAB: Muscles, Equip, Types, Intensity, Goals
 muscle_groups = [
     "Quadriceps","Hamstrings","Glutes","Calves","Hip Flexors",
-    "Chest","Upper Back","Lats","Lower Back","Trapezius",
-    "Deltoids Anterior","Deltoids Lateral","Deltoids Posterior",
+    "Chest","Upper Back","Lats","Lower Back",
+    "Deltoids Anterior","Deltoids Lateral","Deltoids Posterior","Deltoids",
     "Biceps","Triceps","Forearms",
-    "Core","Obliques","Erector Spinae","Lower Abs","Upper Abs",
+    "Core","Obliques","Lower Abs","Upper Abs",
     "Adductors","Abductors","Serratus Anterior","Neck"
 ]
 
@@ -102,195 +102,225 @@ primary_muscle_map = {
     "Turkish Get Up": ["Core","Shoulders","Glutes"]
 }
 
-equipment_map = {
-    # defaults; many will be bodyweight
-    "Barbell Bench Press":"Barbell","Dumbbell Bench Press":"Dumbbell","Incline Bench Press":"Barbell",
-    "Push Up":"None","Wide Push Up":"None","Pull-Up":"Pull-up Bar","Chin-Up":"Pull-up Bar",
-    "Deadlift":"Barbell","Romanian Deadlift":"Barbell","Kettlebell Swing":"Kettlebell",
-    "Leg Press":"Leg Press Machine","Seated Cable Row":"Cable Machine","Lat Pulldown":"Cable Machine",
-    "Treadmill":"Treadmill","Cycling (Stationary)":"Cycling (Stationary)","Rowing (Machine)":"Rowing Machine",
-    "Plank":"None","Burpee":"None","Box Jump":"None","Jump Rope":"None","Sled Push":"None"
-}
-
 def normalize_name(name):
     return re.sub(r"\s+", " ", name.lower().strip())
 
-MOVEMENT_PATTERNS = {
-    "squat": ["squat", "lunge", "split squat", "step up", "pistol"],
-    "hinge": ["deadlift", "hinge", "hip thrust", "glute bridge", "good morning", "kettlebell swing"],
-    "push_horizontal": ["bench", "push up", "chest press", "fly"],
-    "push_vertical": ["overhead press", "shoulder press", "military press"],
-    "pull_horizontal": ["row", "seated row", "bent over row"],
-    "pull_vertical": ["pull-up", "chin-up", "lat pulldown"],
-    "isolation_arm": ["curl", "extension", "pushdown", "skull crusher"],
-    "core": ["plank", "crunch", "sit-up", "leg raise", "pallof", "hollow", "dead bug"],
-    "locomotion": ["run", "sprint", "walk", "treadmill", "cycle", "bike", "rower"],
-    "plyometric": ["jump", "box jump", "plyo", "burpee"],
-    "mobility": ["stretch", "mobility", "foam roll", "dynamic", "yoga"]
-}
-
-PATTERN_TO_MUSCLES = {
-    "squat": ["Quadriceps", "Glutes"],
-    "hinge": ["Hamstrings", "Glutes"],
-    "push_horizontal": ["Chest", "Triceps"],
-    "push_vertical": ["Deltoids Anterior", "Triceps"],
-    "pull_horizontal": ["Upper Back", "Lats"],
-    "pull_vertical": ["Lats", "Biceps"],
-    "isolation_arm": ["Biceps", "Triceps"],
-    "core": ["Core"],
-    "plyometric": ["Quadriceps", "Glutes"],
-    "locomotion": ["Quadriceps", "Calves"],
-}
-
 # utility heuristics
 
-# We change to movement patterns to elevate the quality of the classification
-def infer_movement_pattern(name):
-    n = normalize_name(name)
-    for pattern, keywords in MOVEMENT_PATTERNS.items():
-        if any(k in n for k in keywords):
-            return pattern
-    return "unknown"
+# Change to semantic family relation to elevate the quality of the classification
+def infer_semantic_family(name: str) -> str:
+    n = name.lower()
 
-def infer_primary_muscles(name):
-    # Change to pattern muscles
-    pattern = infer_movement_pattern(name)
-    return PATTERN_TO_MUSCLES.get(pattern, ["Unknown"])
-    
-    ### Left this code commentated if we need to rollback
-    # check mapping first
-    # if name in primary_muscle_map:
-    #     return primary_muscle_map[name]
-    # # heuristics
-    # name_lower = name.lower()
-    # # muscle indicators
-    # if any(k in name_lower for k in ["squat","lunge","leg","deadlift","thrust","hip","glute","step up","press"]):
-    #     return ["Quadriceps","Glutes"]
-    # if any(k in name_lower for k in ["bench","push","chest","fly","pec"]):
-    #     return ["Chest"]
-    # if any(k in name_lower for k in ["pull","row","lat","chin","back","shrug"]):
-    #     return ["Lats","Upper Back"]
-    # if any(k in name_lower for k in ["press","overhead","shoulder","delt"]):
-    #     return ["Deltoids Anterior","Deltoids Lateral"]
-    # if any(k in name_lower for k in ["curl","biceps","wrist"]):
-    #     return ["Biceps"]
-    # if any(k in name_lower for k in ["triceps","skull","pushdown","dip"]):
-    #     return ["Triceps"]
-    # if any(k in name_lower for k in ["plank","sit-up","crunch","ab","core","oblique","pallof","hollow","dead bug","leg raise"]):
-    #     return ["Core"]
-    # return ["Core"]
+    # Weightlifting / Olympic
+    if any(k in n for k in [
+        "snatch", "clean", "jerk", "hang clean", "hang snatch", "power clean", "power snatch"
+    ]):
+        return "weightlifting"
 
-def infer_equipment(name):
-    ### Change key words based on patterns
-    n = normalize_name(name)
-    if any(k in n for k in ["barbell"]):
+    # Carries
+    if any(k in n for k in [
+        "carry", "farmer", "suitcase", "overhead carry"
+    ]):
+        return "carry"
+
+    # Core rotational / anti-rotation
+    if any(k in n for k in [
+        "twist", "pallof", "woodchopper", "rotation"
+    ]):
+        return "core_rotational"
+
+    # Cardio machines
+    if any(k in n for k in [
+        "treadmill", "elliptical", "bike", "cycling", "rowing"
+    ]):
+        return "cardio_machine"
+
+    # Functional cardio / conditioning
+    if any(k in n for k in [
+        "burpee", "battle rope", "rope", "slam", "sled", "air bike", "step", "jump"
+    ]):
+        return "cardio_functional"
+
+    # Mobility / yoga / rehab
+    if any(k in n for k in [
+        "stretch", "mobility", "pose", "pigeon", "cat", "cow", "child", "yoga"
+    ]):
+        return "mobility"
+
+    # Balance / stability
+    if any(k in n for k in [
+        "balance", "bosu", "stability", "single-leg", "unstable"
+    ]):
+        return "stability"
+
+    # Strength / hypertrophy (default)
+    return "strength"
+
+
+def infer_primary_muscles(name: str):
+    family = infer_semantic_family(name)
+    n = name.lower()
+
+    if family == "weightlifting":
+        return ["Glutes", "Hamstrings", "Quadriceps", "Lower Back", "Upper Back", "Core"]
+
+    if family == "carry":
+        return ["Core", "Forearms", "Upper Back"]
+
+    if family == "core_rotational":
+        return ["Core", "Obliques"]
+
+    if family == "cardio_machine":
+        return ["Quadriceps", "Calves"]
+
+    if family == "cardio_functional":
+        return ["Full Body"]
+
+    if family == "mobility":
+        return ["Core"]
+
+    if family == "stability":
+        return ["Core"]
+
+    # strength (fallback con keywords suaves)
+    if any(k in n for k in ["deadlift", "hip"]):
+        return ["Hamstrings", "Glutes"]
+    if any(k in n for k in ["squat", "lunge", "leg"]):
+        return ["Quadriceps", "Glutes"]
+    if any(k in n for k in ["overhead", "raise"]):
+        return ["Deltoids", "Lats"]
+    if any(k in n for k in ["bench", "push", "chest", "press"]):
+        return ["Chest", "Triceps"]
+    if any(k in n for k in ["row", "pull", "lat"]):
+        return ["Lats", "Upper Back"]
+    if any(k in n for k in ["curl"]):
+        return ["Biceps"]
+    if any(k in n for k in ["triceps", "dip"]):
+        return ["Triceps"]
+    if any(k in n for k in ["calf"]):
+        return ["Calves"]
+    if any(k in n for k in ["glute"]):
+        return ["Glutes"]
+
+    return ["Core"]
+
+
+def infer_equipment(name: str):
+    n = name.lower()
+    family = infer_semantic_family(name)
+
+    # Family-based inference (highest priority)
+
+    if family == "weightlifting":
         return "Barbell"
+
+    if family == "carry":
+        # assume farmer / suitcase carry
+        if any(k in n for k in ["kettlebell", "kb"]):
+            return "Kettlebell"
+        if any(k in n for k in ["dumbbell", "db"]):
+            return "Dumbbell"
+        return "Dumbbell"
+
+    if family == "cardio_machine":
+        if "elliptical" in n:
+            return "Elliptical"
+        if "row" in n:
+            return "Rowing Machine"
+        if "bike" in n or "cycle" in n:
+            return "Cycling (Stationary)"
+        if "box" in n or "step" in n:
+            return "Box/Stepper"
+        
+        return "Treadmill"
+
+    if family == "cardio_functional":
+        if "rope" in n:
+            return "Battle Ropes"
+        if "sled" in n:
+            return "Sled"
+        return "None"
+
+    if family == "mobility":
+        return "None"
+
+    if family == "stability":
+        return "None"
+
+    # Keyword-based inference (fallback)
+
+    if any(k in n for k in ["barbell", "bench", "squat", "deadlift", "press", "clean", "snatch"]):
+        return "Barbell"
+
     if any(k in n for k in ["dumbbell", "db "]):
         return "Dumbbell"
+
     if any(k in n for k in ["kettlebell", "kb "]):
         return "Kettlebell"
+
     if any(k in n for k in ["cable", "pulldown"]):
         return "Cable Machine"
-    if any(k in n for k in ["trx", "band"]):
-        return "Resistance Band"
-    if "treadmill" in n:
-        return "Treadmill"
-    if any(k in n for k in ["bike", "cycle"]):
-        return "Cycling (Stationary)"
-    if "rower" in n:
-        return "Rowing Machine"
 
+    if any(k in n for k in ["trx", "suspension"]):
+        return "TRX"
+
+    if any(k in n for k in ["band", "resistance"]):
+        return "Resistance Band"
+
+    if any(k in n for k in ["pull-up", "chin-up"]):
+        return "Pull-up Bar"
+
+    if any(k in n for k in ["plank", "push up", "burpee", "lunge", "jump"]):
+        return "None"
+
+    # Safe fallback
     return "None"
 
-    ### Left this if needed
-    # if any(k in name_lower for k in ["barbell","bench","squat","deadlift","press","clean","snatch"]):
-    #     return "Barbell"
-    # if any(k in name_lower for k in ["dumbbell","db ","dumb"]):
-    #     return "Dumbbell"
-    # if any(k in name_lower for k in ["kettlebell","kb "]):
-    #     return "Kettlebell"
-    # if any(k in name_lower for k in ["cable","pulldown","row"]):
-    #     return "Cable Machine"
-    # if any(k in name_lower for k in ["band","trx","resistance"]):
-    #     return "Resistance Band"
-    # if any(k in name_lower for k in ["run","treadmill","bike","cycling","row"]):
-    #     if "treadmill" in name_lower: return "Treadmill"
-    #     if "cycle" in name_lower or "cycling" in name_lower: return "Cycling (Stationary)"
-    #     if "row" in name_lower: return "Rowing Machine"
-    # if any(k in name_lower for k in ["bw","bodyweight","push","pull","plank","burpee","jump","box","lunge"]):
-    #     return "None"
-    # return "None"
+def infer_type(name: str):
+    family = infer_semantic_family(name)
 
-def infer_type(name):
-    pattern = infer_movement_pattern(name)
-
-    if pattern in ["locomotion", "plyometric"]:
+    if family == "weightlifting":
+        return "Power"
+    if family in ["cardio_machine", "cardio_functional"]:
         return "Cardio"
-    if pattern == "mobility":
+    if family == "mobility":
         return "Mobility"
-    if pattern == "core":
+    if family == "stability":
+        return "Stability"
+    if family == "core_rotational":
         return "Stability"
 
     return "Strength"
 
-    ### Left here if needed
-    # n = name.lower()
-    # if any(k in n for k in ["run","cycle","burpee","jump","row","sprint","cardio","kettlebell complex","box jump"]):
-    #     return "Cardio"
-    # if any(k in n for k in ["squat","deadlift","press","bench","row","pull","lunge","curl","dip","clean","snatch"]):
-    #     return "Strength"
-    # if any(k in n for k in ["stretch","mobility","car","child","foam roll","dynamic warm","world's greatest"]):
-    #     return "Mobility"
-    # if any(k in n for k in ["plank","hollow","leg raise","pallof","oblique","core","sit-up","ab"]):
-    #     return "Stability"
-    # return "Strength"
 
-def infer_intensity(name):
-    n = normalize_name(name)
+def infer_intensity(name: str):
+    family = infer_semantic_family(name)
 
-    if any(k in n for k in ["stretch", "mobility", "yoga", "walk"]):
+    if family in ["mobility"]:
         return "Low"
-    if any(k in n for k in ["jump", "sprint", "burpee", "clean", "snatch"]):
+    if family in ["cardio_machine", "cardio_functional"]:
+        return "Moderate"
+    if family in ["weightlifting"]:
         return "High"
 
     return "Moderate"
 
-    ### Left here if needed
-    # n = name.lower()
-    # if any(k in n for k in ["walk","jog","stretch","plank","yoga","mobility","stretch","child","foam roll"]):
-    #     return "Low"
-    # if any(k in n for k in ["push up","bench","dumbbell","row","curl","lunge","step up","cycle"]):
-    #     return "Moderate"
-    # if any(k in n for k in ["squat","deadlift","sprint","burpee","box jump","clean","snatch","kettlebell swing","sled","plyo"]):
-    #     return "High"
-    # return "Moderate"
 
-def infer_goals(name):
-    n = normalize_name(name)
-    goals = []
+def infer_goals(name: str):
+    family = infer_semantic_family(name)
 
-    if any(k in n for k in ["squat", "deadlift", "press", "clean", "snatch"]):
-        goals.append("Strength")
-    if any(k in n for k in ["curl", "extension", "fly"]):
-        goals.append("Hypertrophy")
-    if any(k in n for k in ["run", "jump", "burpee", "bike"]):
-        goals.append("Fat Loss")
-    if any(k in n for k in ["plank", "mobility", "stretch"]):
-        goals.append("Mobility")
+    if family == "weightlifting":
+        return ["Power", "Strength"]
+    if family == "strength":
+        return ["Strength", "Hypertrophy"]
+    if family in ["cardio_machine", "cardio_functional"]:
+        return ["Fat Loss", "Endurance"]
+    if family == "mobility":
+        return ["Mobility", "Rehab"]
+    if family == "stability":
+        return ["Rehab"]
 
-    return list(set(goals)) or ["Strength"]
-    
-    # if any(k in n for k in ["squat","deadlift","bench","press","clean","snatch","hip thrust"]):
-    #     goals.append("Strength")
-    # if any(k in n for k in ["hypertrophy","bodybuilding","isolation","curl","fly","extension"]):
-    #     goals.append("Hypertrophy")
-    # if any(k in n for k in ["run","sprint","burpee","jump","row","bike","cardio","box jump","kettlebell complex"]):
-    #     goals.append("Fat Loss")
-    # if any(k in n for k in ["plank","pallof","stability","balance","mobility","stretch"]):
-    #     goals.append("Mobility")
-    # if goals == []:
-    #     goals = ["Strength"]
-    # return list(set(goals))
+    return ["Strength"]
 
 
 # Build nodes and edges

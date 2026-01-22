@@ -1,21 +1,21 @@
 {
-  "num_nodes": 510,
-  "num_edges": 2858,
+  "num_nodes": 509,
+  "num_edges": 3418,
   "node_types": {
-    "Exercise": 453,
-    "MuscleGroup": 26,
-    "Equipment": 16,
+    "Exercise": 452,
+    "MuscleGroup": 25,
+    "Equipment": 17,
     "ExerciseType": 10,
     "IntensityLevel": 3,
     "ExerciseGoal": 2
   },
   "edge_types": {
-    "targets": 726,
-    "supportsGoal": 455,
+    "supportsGoal": 894,
+    "targets": 837,
     "requires": 453,
     "hasType": 453,
     "hasIntensity": 453,
-    "recruits": 256,
+    "recruits": 266,
     "isVariationOf": 62
   }
 }
