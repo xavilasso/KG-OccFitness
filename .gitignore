@@ -2,3 +2,13 @@ venv/
 __pycache__/
 *.pyc
 .env
+*.csv
+fitkg_lite_output/
+fitkg_v3_output/
+tests.py
+build_fitkg_lite_v2.py
+build_fitkg_lite.py
+KG-OccFitness.code-workspace
+excercises_firstV.json
+exercises_full_v2.json
+exercises_full.json
