@@ -3,9 +3,6 @@
 """
 Constructor del Fitness Knowledge Graph, version 3.
 
-Reescritura de build_fitkg_lite_v2.py. Corrige los errores de construccion
-detectados al caracterizar el grafo, y soporta dos fuentes de conocimiento:
-
   --source free-exercise-db   (RECOMENDADA) ingiere el JSON de
       https://github.com/yuhonas/free-exercise-db  (dominio publico, Unlicense),
       que trae primaryMuscles, secondaryMuscles, equipment, force, mechanic,
@@ -15,41 +12,6 @@ detectados al caracterizar el grafo, y soporta dos fuentes de conocimiento:
   --source names              modo compatible: lista plana de nombres +
       heuristicas por palabra clave (lo que hacia la v2). Se conserva solo para
       reproducir el grafo anterior; NO deberia usarse para publicar.
-
-Errores corregidos respecto de la v2
-------------------------------------
-E1. COLISION DE NAMESPACE. `id_map` estaba indexado solo por nombre, asi que
-    add_node("Strength", "ExerciseGoal") devolvia el nodo ExerciseType ya
-    existente con ese nombre. Consecuencia: 847 de las 894 aristas supportsGoal
-    apuntaban a nodos ExerciseType y solo sobrevivian dos ExerciseGoal reales
-    ("Fat Loss" y "Rehab"). Ahora la clave es (tipo, nombre_normalizado).
-
-E2. isVariationOf ERAN SELF-LOOPS. name.replace("Incline ", "") no hace nada
-    sobre "Barbell Bench Press - Incline" (el sufijo va al final, sin espacio
-    despues), asi que base == name y la arista iba del nodo a si mismo. 61 de
-    las 62 aristas de la relacion jerarquica eran self-loops. Ahora la variante
-    se detecta por sufijo declarado y se verifica que base != variante.
-
-E3. EJERCICIO ABSORBIDO POR EQUIPAMIENTO. "Battle Ropes" es a la vez nombre de
-    ejercicio y equipamiento inferido; como el namespace era unico, el ejercicio
-    nunca se creo y el nodo Equipment quedo emitiendo targets/hasType/
-    hasIntensity/supportsGoal. De ahi el desajuste 452 vs 453.
-
-E4. SELF-LOOPS EN requires. "Elliptical" y "Cycling (Stationary)" se infieren
-    como su propio equipamiento. Ahora se rechaza cualquier arista u == v.
-
-E5. TENSOR CON ARISTAS ESPEJO. La v2 escribia edge_index = [src+tgt, tgt+src]
-    con el MISMO edge_type, duplicando cada asercion. Eso provoca fuga entre
-    train y test al particionar. Ahora el .pt guarda solo aristas dirigidas; las
-    inversas se añaden en tiempo de entrenamiento como relaciones propias.
-
-E6. VOCABULARIO MUERTO Y CODIGO MUERTO. primary_muscle_map (33 entradas
-    curadas a mano) nunca se consultaba. Aqui, si se aporta un mapa curado, se
-    aplica con prioridad sobre cualquier heuristica y se reporta su cobertura.
-
-E7. VALIDACION AUSENTE. Ahora se comprueba el esquema (dominio y rango de cada
-    relacion), se detectan nodos aislados y vocabulario sin usar, y el script
-    FALLA en lugar de escribir un grafo invalido.
 
 Uso:
     python build_fitkg_v3.py --source free-exercise-db --input exercises.json
@@ -90,8 +52,7 @@ SCHEMA = {
     "hasMechanic":   ("Exercise", "MechanicType"),   # compound / isolation
 }
 
-# Calificadores de equipamiento al inicio del nombre. Se retiran para detectar
-# la familia de movimiento a la que pertenece un ejercicio.
+# Calificadores de equipamiento al inicio del nombre. Se retiran para detectar la familia de movimiento a la que pertenece un ejercicio.
 EQUIPMENT_QUALIFIER = re.compile(
     r"^(barbell|dumbbell|cable|machine|smith machine|kettlebell|band|bands|banded|"
     r"bodyweight|body weight|ez.?bar|e-z.?bar|lever|sled|weighted|seated|standing|"
@@ -282,7 +243,6 @@ def build(recs, add_goals=True, variation_mode="family"):
                 g.add_edge(eid, g.add_node(go, "ExerciseGoal"), "supportsGoal")
 
     # --- isVariationOf ------------------------------------------------
-    # E2: por sufijo declarado, exigiendo que la base exista y sea distinta.
     for n in list(g.nodes):
         if n["type"] != "Exercise":
             continue
@@ -292,10 +252,7 @@ def build(recs, add_goals=True, variation_mode="family"):
             if bid is not None:
                 g.add_edge(n["node_id"], bid, "isVariationOf")
 
-    # Ademas, por familia de movimiento: mismo nucleo tras retirar el
-    # calificador de equipamiento, y al menos un musculo primario en comun.
-    # La base canonica es el miembro de nombre mas corto. Estas aristas son
-    # CANDIDATAS y se exportan aparte para validacion por el experto.
+    # La base canonica es el miembro de nombre mas corto. Estas aristas son CANDIDATAS y se exportan aparte para validacion por el experto.
     candidates = []
     if variation_mode == "family":
         fams = defaultdict(list)
@@ -319,7 +276,7 @@ def build(recs, add_goals=True, variation_mode="family"):
 
 
 # =====================================================================
-# Validacion. E7
+# Validacion
 # =====================================================================
 
 def validate(g, strict=True):
@@ -423,7 +380,7 @@ def export(g, out_dir):
 
     rels = sorted({e["rel"] for e in g.edges})
     r2i = {r: i for i, r in enumerate(rels)}
-    # E5: SOLO aristas dirigidas. Las inversas se añaden al entrenar.
+
     edge_index = torch.tensor([[e["source"] for e in g.edges],
                                [e["target"] for e in g.edges]], dtype=torch.long)
     edge_type = torch.tensor([r2i[e["rel"]] for e in g.edges], dtype=torch.long)
