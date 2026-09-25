@@ -1,14 +1,19 @@
+# entorno
 venv/
+.venv/
 __pycache__/
 *.pyc
 .env
-*.csv
-fitkg_lite_output/
-fitkg_v3_output/
-tests.py
-build_fitkg_lite_v2.py
+*.code-workspace
+
+# versiones anteriores (v1/v2): no forman parte del artefacto publicado
 build_fitkg_lite.py
-KG-OccFitness.code-workspace
-excercises_firstV.json
-exercises_full_v2.json
-exercises_full.json
+build_fitkg_lite_v2.py
+fitkg_lite_output/
+data/excercises_firstV.json
+data/exercises_full.json
+data/exercises_full_v2.json
+tests.py
+
+# material de trabajo de la revision experta, sin script que lo genere
+fitkg_v3_output/isvariationof_traducido.csv

@@ -1,0 +1,28 @@
+Fitness Knowledge Graph (FKG) — data licence
+
+The files in fitkg_v3_output/ and the file muscle_uberon_mapping.csv are
+Copyright (c) 2026 Karla Avila, Javier Lasso-Saldaña, Jorge Gálvez, Omar Avalos
+and are licensed under the Creative Commons Attribution 4.0 International
+licence (CC BY 4.0): https://creativecommons.org/licenses/by/4.0/
+
+You may share and adapt this material for any purpose, including commercial
+use, provided you give appropriate credit, provide a link to the licence and
+indicate whether changes were made. Please cite:
+
+  K. Avila, J. Lasso-Saldaña, J. Gálvez, O. Avalos. Design and Construction of
+  a Multi-Relational Fitness Knowledge Graph for Semantic Exercise
+  Representation. Mathematics, MDPI, 2026. DOI: [PENDIENTE]
+
+Third-party material
+--------------------
+
+data/exercises.json and the exercise attributes derived from it come from the
+Free Exercise Database (https://github.com/yuhonas/free-exercise-db), released
+into the public domain under the Unlicense. No restriction applies to them.
+
+The Uberon identifiers, labels and IRIs in muscle_uberon_mapping.csv come from
+the Uberon anatomy ontology (https://obophenotype.github.io/uberon/), licensed
+under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Reuse of those
+columns requires attribution to Uberon:
+  Mungall C.J., Torniai C., Gkoutos G.V., Lewis S.E., Haendel M.A. Uberon, an
+  integrative multi-species anatomy ontology. Genome Biology 13, R5 (2012).
