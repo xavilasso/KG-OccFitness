@@ -1,0 +1,25 @@
+{
+  "num_nodes": 922,
+  "num_assertions": 8598,
+  "node_types": {
+    "Exercise": 873,
+    "MuscleGroup": 17,
+    "Equipment": 12,
+    "ExerciseType": 5,
+    "IntensityLevel": 3,
+    "ForceType": 3,
+    "MechanicType": 2,
+    "ExerciseGoal": 7
+  },
+  "relation_types": {
+    "targets": 873,
+    "requires": 873,
+    "hasType": 873,
+    "hasIntensity": 873,
+    "hasForce": 844,
+    "hasMechanic": 786,
+    "supportsGoal": 1647,
+    "recruits": 1701,
+    "isVariationOf": 128
+  }
+}

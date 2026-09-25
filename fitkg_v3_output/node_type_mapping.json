@@ -1,0 +1,10 @@
+{
+  "Equipment": 0,
+  "Exercise": 1,
+  "ExerciseGoal": 2,
+  "ExerciseType": 3,
+  "ForceType": 4,
+  "IntensityLevel": 5,
+  "MechanicType": 6,
+  "MuscleGroup": 7
+}

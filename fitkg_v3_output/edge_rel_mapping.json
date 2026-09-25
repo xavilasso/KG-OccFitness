@@ -1,0 +1,11 @@
+{
+  "hasForce": 0,
+  "hasIntensity": 1,
+  "hasMechanic": 2,
+  "hasType": 3,
+  "isVariationOf": 4,
+  "recruits": 5,
+  "requires": 6,
+  "supportsGoal": 7,
+  "targets": 8
+}
